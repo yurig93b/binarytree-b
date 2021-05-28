@@ -27,22 +27,21 @@ demo: Demo.o $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 
-StudentTest1.cpp:  # ...
-	curl https://raw.githubusercontent.com/... > $@
+StudentTest1.cpp:  # Michael Trushkin
+	curl https://raw.githubusercontent.com/miko-t/binaryTreeCpp/main/Test.cpp > $@
 
-StudentTest2.cpp:  # ...
-	curl https://raw.githubusercontent.com/... > $@
+StudentTest2.cpp:  # Yuval Moshe
+	curl https://raw.githubusercontent.com/Yuval-Moshe/CPP-binarytree-a/master/Test.cpp > $@
 
-StudentTest3.cpp:  # ...
-	curl https://raw.githubusercontent.com/... > $@
+StudentTest3.cpp:  # Asahel Cohen
+	curl https://raw.githubusercontent.com/asahelcohen/BinaryTree-tamplate-cpp/main/Test.cpp > $@
 
 
 tidy:
-	clang-tidy $(HEADERS) $(TIDY_FLAGS) --
+	clang-tidy sources/BinaryTree.hpp $(TIDY_FLAGS) --
 
-valgrind: demo test
-	valgrind --tool=memcheck $(VALGRIND_FLAGS) ./demo 2>&1 | { egrep "lost| at " || true; }
-	valgrind --tool=memcheck $(VALGRIND_FLAGS) ./test 2>&1 | { egrep "lost| at " || true; }
+valgrind: test1
+	valgrind --tool=memcheck $(VALGRIND_FLAGS) ./test1 2>&1 | { egrep "lost| at " || true; }
 
 %.o: %.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) --compile $< -o $@
