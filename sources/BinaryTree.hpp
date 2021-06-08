@@ -185,10 +185,8 @@ namespace ariel {
                             else {
                                 throw std::runtime_error("Unknown traverse type");
                             }
-
                             next->visit_id = this->traverse_id;
                         }
-
                     }
 
                     std::shared_ptr <Node> &get_node_parent_sptr(){
@@ -203,15 +201,19 @@ namespace ariel {
                         return &(*(next->val));
                     }
 
+                    // Performs in order iteration
                     iterator &next_in_order() {
                         if (next->right) {
                             next = next->right;
+                            // Go to left most
                             this->deepen_in_order();
                             return *this;
                         }
 
                         while (true) {
                             auto parent_spt = next->parent.lock();
+
+                            // Traverse up by parent
                             if (!parent_spt) {
                                 next.reset();
                                 return *this;
@@ -249,7 +251,7 @@ namespace ariel {
                     iterator &next_pre_order() {
                         bool done = false;
                         while (!done && next) {
-                            // If has a non visisted left child.
+                            // If has a non visited left child.
                             if (next->left && !(next->left->visit_id == this->traverse_id)) {
                                 next = next->left;
                                 done = true;
