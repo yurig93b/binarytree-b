@@ -95,12 +95,10 @@ namespace ariel {
             BinaryTree<T>() = default;
 
             BinaryTree<T>(BinaryTree<T> &&o) noexcept {
-//                std::cout << "RVALUE copy" << std::endl;
                 this->root = std::move(o.root);
             }
 
             BinaryTree<T>(const BinaryTree<T> &o) noexcept {
-//                std::cout << " const LVALUE copy" << std::endl;
                 if (o.root) {
                     this->add_root(*(o.root->val));
                     _copy(this->root, o.root);
@@ -125,7 +123,6 @@ namespace ariel {
             /// \param o source
             /// \return this.
             BinaryTree<T> &operator=(const BinaryTree<T> &o) {
-//                std::cout << "COPY ASSIGMENT " << std::endl;
                 if (o.root) {
                     this->add_root(*(o.root->val));
                     _copy(this->root, o.root);
@@ -137,7 +134,6 @@ namespace ariel {
             /// \param other source to take over.
             /// \return this.
             BinaryTree<T> &operator=(BinaryTree<T> &&other) noexcept {
-//                std::cout << "RMOVE" << std::endl;
                 if (other.root) {
                     this->root = std::move(other.root);
                 }
@@ -145,35 +141,37 @@ namespace ariel {
             }
 
             ///////////// Iterator /////////////
-            class iterator {
-                    static int id;
+            class iterator : public std::iterator<std::forward_iterator_tag, T> {
+                static int id;
 
-                    std::shared_ptr <Node> next;
-                    TraverseType traverse_type;
-                    int traverse_id;
+                std::shared_ptr <Node> next;
+                TraverseType traverse_type;
+                int traverse_id;
+                int distance;
 
-                    // Goes to deeper left most or right most child.
-                    void deepen_post_order() {
-                        while (next->left || next->right) {
-                            if (next->left) {
-                                next = next->left;
-                            } else if (next->right) {
-                                next = next->right;
-                            }
-                        }
-                    }
-
-                    // Goes to deepest left child.
-                    void deepen_in_order() {
-                        while (next->left) {
+                // Goes to deeper left most or right most child.
+                void deepen_post_order() {
+                    while (next->left || next->right) {
+                        if (next->left) {
                             next = next->left;
+                        } else if (next->right) {
+                            next = next->right;
                         }
                     }
+                }
+
+                // Goes to deepest left child.
+                void deepen_in_order() {
+                    while (next->left) {
+                        next = next->left;
+                    }
+                }
 
                 public:
                     iterator(std::shared_ptr <Node> _root, TraverseType _traverse_type) : next(_root),
                                                                                           traverse_type(_traverse_type),
-                                                                                          traverse_id(id) {
+                                                                                          traverse_id(id),
+                                                                                          distance(0) {
                         id++; // Iterator counter ++.
 
                         if (this->next) {
@@ -189,7 +187,7 @@ namespace ariel {
                         }
                     }
 
-                    std::shared_ptr <Node> &get_node_parent_sptr(){
+                    std::shared_ptr <Node> &get_node_parent_sptr() {
                         return this->next;
                     }
 
@@ -241,7 +239,6 @@ namespace ariel {
                             } else {
                                 next = parent_spt;
                             }
-
                         }
 
                         return *this;
@@ -254,15 +251,18 @@ namespace ariel {
                             // If has a non visited left child.
                             if (next->left && !(next->left->visit_id == this->traverse_id)) {
                                 next = next->left;
+                                distance++;
                                 done = true;
                             } else if (next->right && !(next->right->visit_id == this->traverse_id)) {
                                 // Non vivisted right child.
                                 next = next->right;
+                                distance++;
                                 done = true;
                             } else {
                                 // Traverse up.
                                 auto parent_spt = next->parent.lock();
                                 next = parent_spt;
+                                distance--;
                             }
                         }
 
@@ -307,39 +307,43 @@ namespace ariel {
                     bool operator!=(const iterator &rhs) const {
                         return !operator==(rhs);
                     }
+
+                    bool operator<(const iterator &o) const {
+                        return *(next->val) < *(o->val);
+                    }
             };
 
 
             ///////////// BinaryTree /////////////
-            iterator begin() {
+            iterator begin() const{
                 return this->begin_inorder();
             }
 
-            iterator end() {
+            iterator end() const{
                 return this->end_inorder();
             }
 
-            iterator begin_postorder() {
+            iterator begin_postorder() const{
                 return iterator(root, TraverseType::PostOrder);
             }
 
-            iterator begin_preorder() {
+            iterator begin_preorder() const{
                 return iterator(root, TraverseType::PreOrder);
             }
 
-            iterator begin_inorder() {
+            iterator begin_inorder() const {
                 return iterator(root, TraverseType::InOrder);
             }
 
-            iterator end_preorder() {
+            iterator end_preorder() const{
                 return iterator(nullptr, TraverseType::PreOrder);
             }
 
-            iterator end_inorder() {
+            iterator end_inorder() const{
                 return iterator(nullptr, TraverseType::InOrder);
             }
 
-            iterator end_postorder() {
+            iterator end_postorder() const {
                 return iterator(nullptr, TraverseType::PostOrder);
             }
 
@@ -359,7 +363,17 @@ namespace ariel {
                 root->val = std::make_unique<T>(_val);
                 return *this;
             }
+
     };
+
+    template<class T> inline std::ostream& operator<<(std::ostream& out, const BinaryTree<T>& b){
+        auto it = b.begin_preorder();
+        while(it != b.end_preorder()){
+            out << *it << " ";
+            ++it;
+        }
+        return out;
+    }
 
     // Maybe move to cpp file
     template<typename T>
